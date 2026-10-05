@@ -64,8 +64,8 @@ func Listen(events chan event.Event, k8sEvent k8sevent.Recorder, k8sClient k8scl
 				continue // skip the event
 			}
 
-			go func(notificationConfig v1alpha2.Notification) {
-				err = provider.Send(e)
+			go func(notificationConfig v1alpha2.Notification, event event.Event) {
+				err = provider.Send(event)
 				if err != nil {
 					wrapped := errors.WithMessage(err,
 						fmt.Sprintf("failed to send notification '%s'", notificationConfig.Name))
@@ -75,7 +75,7 @@ func Listen(events chan event.Event, k8sEvent k8sevent.Recorder, k8sClient k8scl
 						logger.Error(nil, fmt.Sprintf("%s", wrapped))
 					}
 				}
-			}(notificationConfig)
+			}(notificationConfig, e)
 		}
 	}
 }

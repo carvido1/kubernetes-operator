@@ -36,6 +36,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 	t.Run("execute script and save status", func(t *testing.T) {
 		// given
 		jenkins := &v1alpha2.Jenkins{
+			TypeMeta: v1alpha2.JenkinsTypeMeta(),
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jenkinsName,
 				Namespace: namespace,
@@ -43,7 +44,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 		}
 		err := v1alpha2.SchemeBuilder.AddToScheme(scheme.Scheme)
 		require.NoError(t, err)
-		fakeClient := fake.NewClientBuilder().Build()
+		fakeClient := fake.NewClientBuilder().WithStatusSubresource(&v1alpha2.Jenkins{}).Build()
 		err = fakeClient.Create(ctx, jenkins)
 		require.NoError(t, err)
 
@@ -72,6 +73,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 	t.Run("no execute script", func(t *testing.T) {
 		// given
 		jenkins := &v1alpha2.Jenkins{
+			TypeMeta: v1alpha2.JenkinsTypeMeta(),
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jenkinsName,
 				Namespace: namespace,
@@ -89,7 +91,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 		}
 		err := v1alpha2.SchemeBuilder.AddToScheme(scheme.Scheme)
 		require.NoError(t, err)
-		fakeClient := fake.NewClientBuilder().Build()
+		fakeClient := fake.NewClientBuilder().WithStatusSubresource(&v1alpha2.Jenkins{}).Build()
 		err = fakeClient.Create(ctx, jenkins)
 		require.NoError(t, err)
 
@@ -118,6 +120,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 		anotherHash := "hash1"
 		// given
 		jenkins := &v1alpha2.Jenkins{
+			TypeMeta: v1alpha2.JenkinsTypeMeta(),
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jenkinsName,
 				Namespace: namespace,
@@ -125,7 +128,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 		}
 		err := v1alpha2.SchemeBuilder.AddToScheme(scheme.Scheme)
 		require.NoError(t, err)
-		fakeClient := fake.NewClientBuilder().Build()
+		fakeClient := fake.NewClientBuilder().WithStatusSubresource(&v1alpha2.Jenkins{}).Build()
 		err = fakeClient.Create(ctx, jenkins)
 		require.NoError(t, err)
 
@@ -190,6 +193,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 		thirdGroovyScriptHash := "testHash3"
 
 		jenkins := &v1alpha2.Jenkins{
+			TypeMeta: v1alpha2.JenkinsTypeMeta(),
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jenkinsName,
 				Namespace: namespace,
@@ -197,7 +201,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 		}
 		err := v1alpha2.SchemeBuilder.AddToScheme(scheme.Scheme)
 		require.NoError(t, err)
-		fakeClient := fake.NewClientBuilder().Build()
+		fakeClient := fake.NewClientBuilder().WithStatusSubresource(&v1alpha2.Jenkins{}).Build()
 		err = fakeClient.Create(ctx, jenkins)
 		require.NoError(t, err)
 
@@ -250,6 +254,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 	})
 	t.Run("execute two groovy scripts with same names in two config maps", func(t *testing.T) {
 		jenkins := &v1alpha2.Jenkins{
+			TypeMeta: v1alpha2.JenkinsTypeMeta(),
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jenkinsName,
 				Namespace: namespace,
@@ -257,7 +262,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 		}
 		err := v1alpha2.SchemeBuilder.AddToScheme(scheme.Scheme)
 		require.NoError(t, err)
-		fakeClient := fake.NewClientBuilder().Build()
+		fakeClient := fake.NewClientBuilder().WithStatusSubresource(&v1alpha2.Jenkins{}).Build()
 		err = fakeClient.Create(ctx, jenkins)
 		require.NoError(t, err)
 
@@ -282,6 +287,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 	})
 	t.Run("execute two groovy scripts with different configuration types", func(t *testing.T) {
 		jenkins := &v1alpha2.Jenkins{
+			TypeMeta: v1alpha2.JenkinsTypeMeta(),
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jenkinsName,
 				Namespace: namespace,
@@ -289,7 +295,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 		}
 		err := v1alpha2.SchemeBuilder.AddToScheme(scheme.Scheme)
 		require.NoError(t, err)
-		fakeClient := fake.NewClientBuilder().Build()
+		fakeClient := fake.NewClientBuilder().WithStatusSubresource(&v1alpha2.Jenkins{}).Build()
 		err = fakeClient.Create(ctx, jenkins)
 		require.NoError(t, err)
 
@@ -316,6 +322,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 	t.Run("execute script fails", func(t *testing.T) {
 		// given
 		jenkins := &v1alpha2.Jenkins{
+			TypeMeta: v1alpha2.JenkinsTypeMeta(),
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jenkinsName,
 				Namespace: namespace,
@@ -323,7 +330,7 @@ func TestGroovy_EnsureSingle(t *testing.T) {
 		}
 		err := v1alpha2.SchemeBuilder.AddToScheme(scheme.Scheme)
 		require.NoError(t, err)
-		fakeClient := fake.NewClientBuilder().Build()
+		fakeClient := fake.NewClientBuilder().WithStatusSubresource(&v1alpha2.Jenkins{}).Build()
 		err = fakeClient.Create(ctx, jenkins)
 		require.NoError(t, err)
 
@@ -368,6 +375,7 @@ func TestGroovy_Ensure(t *testing.T) {
 		// given
 		groovyScriptExtension := ".groovy"
 		jenkins := &v1alpha2.Jenkins{
+			TypeMeta: v1alpha2.JenkinsTypeMeta(),
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jenkinsName,
 				Namespace: namespace,
@@ -392,7 +400,7 @@ func TestGroovy_Ensure(t *testing.T) {
 		}
 		err := v1alpha2.SchemeBuilder.AddToScheme(scheme.Scheme)
 		require.NoError(t, err)
-		fakeClient := fake.NewClientBuilder().Build()
+		fakeClient := fake.NewClientBuilder().WithStatusSubresource(&v1alpha2.Jenkins{}).Build()
 		err = fakeClient.Create(ctx, jenkins)
 		require.NoError(t, err)
 		err = fakeClient.Create(ctx, configMap)
@@ -429,6 +437,7 @@ func TestGroovy_Ensure(t *testing.T) {
 		// given
 		groovyScriptSuffix := "suffix"
 		jenkins := &v1alpha2.Jenkins{
+			TypeMeta: v1alpha2.JenkinsTypeMeta(),
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jenkinsName,
 				Namespace: namespace,
@@ -452,7 +461,7 @@ func TestGroovy_Ensure(t *testing.T) {
 		}
 		err := v1alpha2.SchemeBuilder.AddToScheme(scheme.Scheme)
 		require.NoError(t, err)
-		fakeClient := fake.NewClientBuilder().Build()
+		fakeClient := fake.NewClientBuilder().WithStatusSubresource(&v1alpha2.Jenkins{}).Build()
 		err = fakeClient.Create(ctx, jenkins)
 		require.NoError(t, err)
 		err = fakeClient.Create(ctx, configMap)
@@ -488,6 +497,7 @@ func TestGroovy_Ensure(t *testing.T) {
 	t.Run("execute script without secret and save status", func(t *testing.T) {
 		// given
 		jenkins := &v1alpha2.Jenkins{
+			TypeMeta: v1alpha2.JenkinsTypeMeta(),
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jenkinsName,
 				Namespace: namespace,
@@ -511,7 +521,7 @@ func TestGroovy_Ensure(t *testing.T) {
 		}
 		err := v1alpha2.SchemeBuilder.AddToScheme(scheme.Scheme)
 		require.NoError(t, err)
-		fakeClient := fake.NewClientBuilder().Build()
+		fakeClient := fake.NewClientBuilder().WithStatusSubresource(&v1alpha2.Jenkins{}).Build()
 		err = fakeClient.Create(ctx, jenkins)
 		require.NoError(t, err)
 		err = fakeClient.Create(ctx, configMap)
@@ -544,6 +554,7 @@ func TestGroovy_Ensure(t *testing.T) {
 	t.Run("execute script with secret and save status", func(t *testing.T) {
 		// given
 		jenkins := &v1alpha2.Jenkins{
+			TypeMeta: v1alpha2.JenkinsTypeMeta(),
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      jenkinsName,
 				Namespace: namespace,
@@ -577,7 +588,7 @@ func TestGroovy_Ensure(t *testing.T) {
 		}
 		err := v1alpha2.SchemeBuilder.AddToScheme(scheme.Scheme)
 		require.NoError(t, err)
-		fakeClient := fake.NewClientBuilder().Build()
+		fakeClient := fake.NewClientBuilder().WithStatusSubresource(&v1alpha2.Jenkins{}).Build()
 		err = fakeClient.Create(ctx, jenkins)
 		require.NoError(t, err)
 		err = fakeClient.Create(ctx, secret)

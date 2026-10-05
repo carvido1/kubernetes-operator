@@ -21,7 +21,7 @@ import (
 )
 
 type backupTrigger struct {
-	interval uint64
+	interval int64
 	ticker   *time.Ticker
 }
 
@@ -155,7 +155,7 @@ func (bar *BackupAndRestore) Restore(jenkinsClient jenkinsclient.Jenkins) error 
 			return bar.Client.Status().Update(context.TODO(), jenkins)
 		}
 
-		backupNumber, err = strconv.ParseUint(backupNumberString, 10, 64)
+		backupNumber, err = strconv.ParseInt(backupNumberString, 10, 64)
 		if err != nil {
 			return errors.Wrapf(err, "invalid backup number '%s' returned by get last backup number action", backupNumberString)
 		}

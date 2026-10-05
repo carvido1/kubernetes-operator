@@ -54,7 +54,7 @@ func createPVC(namespace string) {
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-			Resources: corev1.ResourceRequirements{
+			Resources: corev1.VolumeResourceRequirements{
 				Requests: corev1.ResourceList{
 					corev1.ResourceStorage: resource.MustParse("1Gi"),
 				},
@@ -117,7 +117,7 @@ func createJenkinsWithBackupAndRestoreConfigured(name, namespace string) *v1alph
 							},
 						},
 						ReadinessProbe: &corev1.Probe{
-							Handler: corev1.Handler{
+							ProbeHandler: corev1.ProbeHandler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path:   "/login",
 									Port:   intstr.FromString("http"),
@@ -131,7 +131,7 @@ func createJenkinsWithBackupAndRestoreConfigured(name, namespace string) *v1alph
 							PeriodSeconds:       int32(5),
 						},
 						LivenessProbe: &corev1.Probe{
-							Handler: corev1.Handler{
+							ProbeHandler: corev1.ProbeHandler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path:   "/login",
 									Port:   intstr.FromString("http"),
