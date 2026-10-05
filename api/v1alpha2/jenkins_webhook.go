@@ -30,18 +30,16 @@ import (
 	"github.com/jenkinsci/kubernetes-operator/pkg/plugins"
 
 	"golang.org/x/mod/semver"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var (
-	jenkinslog                                                      = logf.Log.WithName("jenkins-resource") // log is for logging in this package.
-	SecValidator                                                    = *NewSecurityValidator()
-	_                                       webhook.CustomValidator = &Jenkins{}
-	initialSecurityWarningsDownloadSucceded                         = false
+	jenkinslog                                                            = logf.Log.WithName("jenkins-resource") // log is for logging in this package.
+	SecValidator                                                          = *NewSecurityValidator()
+	_                                       admission.Validator[*Jenkins] = &JenkinsValidator{}
+	initialSecurityWarningsDownloadSucceded                               = false
 )
 
 const (
@@ -53,44 +51,38 @@ const (
 )
 
 func (in *Jenkins) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(in).
+	return ctrl.NewWebhookManagedBy(mgr, in).
+		WithValidator(&JenkinsValidator{}).
 		Complete()
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 // +kubebuilder:webhook:path=/validate-jenkins-io-jenkins-io-v1alpha2-jenkins,mutating=false,failurePolicy=fail,sideEffects=None,groups=jenkins.io.jenkins.io,resources=jenkins,verbs=create;update,versions=v1alpha2,name=vjenkins.kb.io,admissionReviewVersions={v1}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type
-func (in *Jenkins) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	jenkins, ok := obj.(*Jenkins)
-	if !ok {
-		return nil, errors.New("expected a Jenkins object")
-	}
-	if jenkins.Spec.ValidateSecurityWarnings {
-		jenkinslog.Info("validate create", "name", jenkins.Name)
-		err := Validate(*jenkins)
-		return nil, err
+// JenkinsValidator validates a Jenkins resource on admission.
+type JenkinsValidator struct{}
+
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type
+func (*JenkinsValidator) ValidateCreate(_ context.Context, in *Jenkins) (admission.Warnings, error) {
+	if in.Spec.ValidateSecurityWarnings {
+		jenkinslog.Info("validate create", "name", in.Name)
+		return nil, Validate(*in)
 	}
 
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type
-func (in *Jenkins) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	jenkins, ok := newObj.(*Jenkins)
-	if !ok {
-		return nil, errors.New("expected a Jenkins object")
-	}
-	if jenkins.Spec.ValidateSecurityWarnings {
-		jenkinslog.Info("validate update", "name", jenkins.Name)
-		return nil, Validate(*jenkins)
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type
+func (*JenkinsValidator) ValidateUpdate(_ context.Context, _, in *Jenkins) (admission.Warnings, error) {
+	if in.Spec.ValidateSecurityWarnings {
+		jenkinslog.Info("validate update", "name", in.Name)
+		return nil, Validate(*in)
 	}
 
 	return nil, nil
 }
 
-func (in *Jenkins) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+func (*JenkinsValidator) ValidateDelete(_ context.Context, _ *Jenkins) (admission.Warnings, error) {
 	return nil, nil
 }
 

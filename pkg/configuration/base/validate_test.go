@@ -616,8 +616,7 @@ func TestValidateConfigMapVolume(t *testing.T) {
 
 		assert.NoError(t, err)
 
-		assert.Len(t, got, 1)
-		assert.Contains(t, got[0], "ConfigMap 'configmap-name' not found for volume")
+		assert.Equal(t, got, []string{"ConfigMap 'configmap-name' not found for volume '{volume-name {nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil &ConfigMapVolumeSource{LocalObjectReference:LocalObjectReference{Name:configmap-name,},Items:[]KeyToPath{},DefaultMode:nil,Optional:*false,DefaultUser:nil,} nil nil nil nil nil nil nil nil nil nil nil}}'"})
 	})
 }
 
@@ -690,8 +689,8 @@ func TestValidateSecretVolume(t *testing.T) {
 		got, err := baseReconcileLoop.validateSecretVolume(volume)
 
 		assert.NoError(t, err)
-		assert.Len(t, got, 1)
-		assert.Contains(t, got[0], "Secret 'secret-name' not found for volume")
+
+		assert.Equal(t, got, []string{"Secret 'secret-name' not found for volume '{volume-name {nil nil nil nil nil &SecretVolumeSource{SecretName:secret-name,Items:[]KeyToPath{},DefaultMode:nil,Optional:*false,DefaultUser:nil,} nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil}}'"})
 	})
 }
 

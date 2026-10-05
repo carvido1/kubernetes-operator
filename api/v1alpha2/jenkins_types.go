@@ -486,15 +486,15 @@ type JenkinsStatus struct {
 
 	// RestoredBackup is the restored backup number after Jenkins master pod restart
 	// +optional
-	RestoredBackup uint64 `json:"restoredBackup,omitempty"`
+	RestoredBackup int64 `json:"restoredBackup,omitempty"`
 
 	// LastBackup is the latest backup number
 	// +optional
-	LastBackup uint64 `json:"lastBackup,omitempty"`
+	LastBackup int64 `json:"lastBackup,omitempty"`
 
 	// PendingBackup is the pending backup number
 	// +optional
-	PendingBackup uint64 `json:"pendingBackup,omitempty"`
+	PendingBackup int64 `json:"pendingBackup,omitempty"`
 
 	// BackupDoneBeforePodDeletion tells if backup before pod deletion has been made
 	// +optional
@@ -640,7 +640,7 @@ type Backup struct {
 
 	// Interval tells how often make backup in seconds
 	// Defaults to 30.
-	Interval uint64 `json:"interval"`
+	Interval int64 `json:"interval"`
 
 	// MakeBackupBeforePodDeletion tells operator to make backup before Jenkins master pod deletion
 	MakeBackupBeforePodDeletion bool `json:"makeBackupBeforePodDeletion"`
@@ -661,7 +661,7 @@ type Restore struct {
 
 	// RecoveryOnce if want to restore specific backup set this field and then Jenkins will be restarted and desired backup will be restored
 	// +optional
-	RecoveryOnce uint64 `json:"recoveryOnce,omitempty"`
+	RecoveryOnce int64 `json:"recoveryOnce,omitempty"`
 }
 
 // AppliedGroovyScript is the applied groovy script in Jenkins by the operator.

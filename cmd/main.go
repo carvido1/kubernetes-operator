@@ -42,16 +42,18 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -129,23 +131,20 @@ func main() {
 		fatal(errors.Wrap(err, "failed to get config"), *debug)
 	}
 
-	cacheNamespace := map[string]cache.Config{}
-	cacheNamespace[namespace] = cache.Config{}
+	// An empty WATCH_NAMESPACE keeps the previous behaviour of caching cluster-wide.
+	cacheOptions := cache.Options{}
+	if namespace != "" {
+		cacheOptions.DefaultNamespaces = map[string]cache.Config{namespace: {}}
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		// MetricsBindAddress:      fmt.Sprintf("%s:%d", metricsHost, metricsPort),
-		Metrics: server.Options{
-			BindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
-		},
-		Scheme: scheme,
-		// Port:                    9443,
-		WebhookServer: webhook.NewServer(webhook.Options{
-			Port: 9443,
-		}),
+		Scheme:                 scheme,
+		Metrics:                metricsserver.Options{BindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort)},
+		WebhookServer:          webhook.NewServer(webhook.Options{Port: 9443}),
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "c674355f.jenkins.io",
-		// Namespace:              namespace,
-		Cache: cache.Options{DefaultNamespaces: cacheNamespace},
+		Cache:                  cacheOptions,
 	})
 	if err != nil {
 		fatal(errors.Wrap(err, "unable to start manager"), *debug)
