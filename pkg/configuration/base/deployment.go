@@ -3,6 +3,7 @@ package base
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jenkinsci/kubernetes-operator/api/v1alpha2"
 	"github.com/jenkinsci/kubernetes-operator/pkg/configuration/base/resources"
@@ -46,7 +47,7 @@ func (r *JenkinsBaseConfigurationReconciler) ensureJenkinsDeployment(meta metav1
 			PendingBackup:       r.Jenkins.Status.LastBackup,
 			UserAndPasswordHash: userAndPasswordHash,
 		}
-		return reconcile.Result{Requeue: true}, r.Client.Update(context.TODO(), r.Jenkins)
+		return reconcile.Result{RequeueAfter: time.Second * 5}, r.Client.Update(context.TODO(), r.Jenkins)
 	} else if err != nil && !apierrors.IsNotFound(err) {
 		return reconcile.Result{}, stackerr.WithStack(err)
 	}

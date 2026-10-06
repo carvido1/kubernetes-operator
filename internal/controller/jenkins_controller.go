@@ -216,7 +216,7 @@ func (r *JenkinsReconciler) reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, jenkins, err
 	}
 	if requeue {
-		return reconcile.Result{Requeue: true}, jenkins, nil
+		return reconcile.Result{RequeueAfter: time.Second}, jenkins, nil
 	}
 
 	config := r.newJenkinsReconcilier(jenkins)

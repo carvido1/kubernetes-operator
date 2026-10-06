@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/jenkinsci/kubernetes-operator/api/v1alpha2"
 	"github.com/jenkinsci/kubernetes-operator/pkg/configuration/backuprestore"
@@ -176,20 +177,20 @@ func (r *JenkinsBaseConfigurationReconciler) ensureJenkinsMasterPod(meta metav1.
 			PendingBackup:       r.Jenkins.Status.LastBackup,
 			UserAndPasswordHash: userAndPasswordHash,
 		}
-		return reconcile.Result{Requeue: true}, r.Client.Status().Update(context.TODO(), r.Jenkins)
+		return reconcile.Result{RequeueAfter: time.Second * 5}, r.Client.Status().Update(context.TODO(), r.Jenkins)
 	} else if err != nil && !apierrors.IsNotFound(err) {
 		return reconcile.Result{}, stackerr.WithStack(err)
 	}
 
 	if currentJenkinsMasterPod == nil {
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{RequeueAfter: time.Second * 5}, nil
 	}
 
 	if r.IsJenkinsTerminating(*currentJenkinsMasterPod) && r.Jenkins.Status.UserConfigurationCompletedTime != nil {
 		backupAndRestore := backuprestore.New(r.Configuration, r.logger)
 		if backupAndRestore.IsBackupTriggerEnabled() {
 			backupAndRestore.StopBackupTrigger()
-			return reconcile.Result{Requeue: true}, nil
+			return reconcile.Result{RequeueAfter: time.Second * 5}, nil
 		}
 		if r.Jenkins.Spec.Backup.MakeBackupBeforePodDeletion && !r.Jenkins.Status.BackupDoneBeforePodDeletion {
 			if r.Jenkins.Status.LastBackup == r.Jenkins.Status.PendingBackup {
@@ -199,7 +200,7 @@ func (r *JenkinsBaseConfigurationReconciler) ensureJenkinsMasterPod(meta metav1.
 				return reconcile.Result{}, err
 			}
 		}
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{RequeueAfter: time.Second * 5}, nil
 	}
 
 	if !r.IsJenkinsTerminating(*currentJenkinsMasterPod) {
@@ -209,7 +210,7 @@ func (r *JenkinsBaseConfigurationReconciler) ensureJenkinsMasterPod(meta metav1.
 				r.logger.Info(msg)
 			}
 
-			return reconcile.Result{Requeue: true}, r.RestartJenkinsMasterPod(restartReason)
+			return reconcile.Result{RequeueAfter: time.Second * 5}, r.RestartJenkinsMasterPod(restartReason)
 		}
 	}
 

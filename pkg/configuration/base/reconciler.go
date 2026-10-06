@@ -117,7 +117,7 @@ func (r *JenkinsBaseConfigurationReconciler) Reconcile() (reconcile.Result, jenk
 			reason.OperatorSource,
 			[]string{message},
 		)
-		return reconcile.Result{Requeue: true}, nil, r.RestartJenkinsMasterPod(restartReason)
+		return reconcile.Result{RequeueAfter: time.Second * 5}, nil, r.RestartJenkinsMasterPod(restartReason)
 	}
 
 	result, err = r.ensureBaseConfiguration(jenkinsClient)
@@ -391,7 +391,7 @@ func (r *JenkinsBaseConfigurationReconciler) waitForJenkins() (reconcile.Result,
 				reason.KubernetesSource,
 				[]string{message},
 			)
-			return reconcile.Result{Requeue: true}, r.RestartJenkinsMasterPod(restartReason)
+			return reconcile.Result{RequeueAfter: time.Second * 5}, r.RestartJenkinsMasterPod(restartReason)
 		}
 		if !containerStatus.Ready {
 			r.logger.V(log.VDebug).Info(fmt.Sprintf("Container '%s' not ready, readiness probe failed", containerStatus.Name))
@@ -419,5 +419,8 @@ func (r *JenkinsBaseConfigurationReconciler) ensureBaseConfiguration(jenkinsClie
 	}, func(groovyScript string) string {
 		return groovyScript
 	})
-	return reconcile.Result{Requeue: requeue}, err
+	if requeue {
+		return reconcile.Result{RequeueAfter: time.Second * 5}, err
+	}
+	return reconcile.Result{}, err
 }

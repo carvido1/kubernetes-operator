@@ -99,7 +99,7 @@ func (r *reconcileUserConfiguration) ensureCasc(jenkinsClient jenkinsclient.Jenk
 		return reconcile.Result{}, err
 	}
 	if requeue {
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{RequeueAfter: time.Second * 5}, nil
 	}
 
 	groovyClient := groovy.New(jenkinsClient, r.Client, r.Jenkins, "user-groovy", r.Jenkins.Spec.GroovyScripts.Customization)
@@ -108,7 +108,7 @@ func (r *reconcileUserConfiguration) ensureCasc(jenkinsClient jenkinsclient.Jenk
 		return reconcile.Result{}, err
 	}
 	if requeue {
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{RequeueAfter: time.Second * 5}, nil
 	}
 	requeue, err = groovyClient.Ensure(func(name string) bool {
 		return strings.HasSuffix(name, ".groovy")
@@ -117,7 +117,7 @@ func (r *reconcileUserConfiguration) ensureCasc(jenkinsClient jenkinsclient.Jenk
 		return reconcile.Result{}, err
 	}
 	if requeue {
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{RequeueAfter: time.Second * 5}, nil
 	}
 
 	return reconcile.Result{}, nil
