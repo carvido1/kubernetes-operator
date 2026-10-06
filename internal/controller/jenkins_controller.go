@@ -133,7 +133,7 @@ func (r *JenkinsReconciler) Reconcile(_ context.Context, request ctrl.Request) (
 
 	result, jenkins, err := r.reconcile(request)
 	if err != nil && apierrors.IsConflict(err) {
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{}, err
 	} else if err != nil {
 		lastErrors, found := reconcileErrors[request.Name]
 		if found {
@@ -166,7 +166,7 @@ func (r *JenkinsReconciler) Reconcile(_ context.Context, request ctrl.Request) (
 					[]string{fmt.Sprintf("Reconcile loop failed %d times with the same errors, giving up: %s", reconcileFailLimit, err)},
 				),
 			}
-			return reconcile.Result{Requeue: false}, nil
+			return reconcile.Result{}, nil
 		}
 
 		if log.Debug {

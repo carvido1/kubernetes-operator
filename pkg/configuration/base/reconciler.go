@@ -373,12 +373,12 @@ func (r *JenkinsBaseConfigurationReconciler) waitForJenkins() (reconcile.Result,
 
 	if r.IsJenkinsTerminating(*jenkinsMasterPod) {
 		r.logger.V(log.VDebug).Info("Jenkins master pod is terminating")
-		return reconcile.Result{Requeue: true, RequeueAfter: time.Second * 5}, nil
+		return reconcile.Result{RequeueAfter: time.Second * 5}, nil
 	}
 
 	if jenkinsMasterPod.Status.Phase != corev1.PodRunning {
 		r.logger.V(log.VDebug).Info("Jenkins master pod not ready")
-		return reconcile.Result{Requeue: true, RequeueAfter: time.Second * 5}, nil
+		return reconcile.Result{RequeueAfter: time.Second * 5}, nil
 	}
 
 	containersReadyCount := 0
@@ -400,7 +400,7 @@ func (r *JenkinsBaseConfigurationReconciler) waitForJenkins() (reconcile.Result,
 		}
 	}
 	if containersReadyCount != len(jenkinsMasterPod.Status.ContainerStatuses) {
-		return reconcile.Result{Requeue: true, RequeueAfter: time.Second * 5}, nil
+		return reconcile.Result{RequeueAfter: time.Second * 5}, nil
 	}
 
 	return reconcile.Result{}, nil
