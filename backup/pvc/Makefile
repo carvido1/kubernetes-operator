@@ -144,7 +144,7 @@ sembump: # Download sembump locally if necessary
 	@echo "+ $@"
 ifndef HAS_SEMBUMP
 	mkdir -p $(PROJECT_DIR)/bin
-	wget -O $(PROJECT_DIR)/bin/sembump https://github.com/justintout/sembump/releases/download/v0.1.0/sembump-linux-amd64
+	wget -O $(PROJECT_DIR)/bin/sembump https://github.com/justintout/sembump/releases/download/v0.1.0/sembump-linux-arm64
 	chmod +x $(PROJECT_DIR)/bin/sembump
 endif
 
