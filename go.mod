@@ -1,6 +1,6 @@
 module github.com/jenkinsci/kubernetes-operator
 
-go 1.26.9
+go 1.26.8
 
 require (
 	github.com/bndr/gojenkins v1.1.0
