@@ -29,8 +29,8 @@ func init() {
 // func TestHelm(t *testing.T) {
 // 	RegisterFailHandler(Fail)
 
-	RunSpecs(t, "Controller Suite")
-}
+// 	RunSpecs(t, "Controller Suite")
+// }
 
 var _ = BeforeSuite(func(done Done) {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(false)))

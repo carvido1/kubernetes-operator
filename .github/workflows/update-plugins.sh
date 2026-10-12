@@ -84,13 +84,14 @@ update_go_file() {
         "workflow-aggregator") var_name="workflowAggregatorPlugin" ;;
     esac
 
-    local relative_path=$(realpath --relative-to="$PROJECT_ROOT" "$file_path")
+    # New (cross-platform):
+    local relative_path=$(python3 -c "import os.path; print(os.path.relpath('$file_path', '$PROJECT_ROOT'))")
     local new_line="	${var_name} = \"${plugin_id}:${new_version}\""
 
     if [ "$dry_run" = "true" ]; then
         echo "$relative_path: $plugin_id:$new_version"
     else
-        sed -i "s|^[[:space:]]*${var_name}[[:space:]]*=.*|${new_line}|" "$file_path"
+        sed -i '' "s|^[[:space:]]*${var_name}[[:space:]]*=.*|${new_line}|" "$file_path"
         echo "$relative_path: $var_name -> $plugin_id:$new_version"
     fi
 }

@@ -26,6 +26,10 @@ include $(config)
 include config.base.env
 $(foreach var,$(shell cat config.base.env),$(eval $(call strip_quotes,$(var))))
 
+# Pin the Go toolchain to the exact version the module targets, so local builds
+# and linting match CI regardless of the `go` on the developer's PATH.
+export GOTOOLCHAIN ?= go$(shell sed -n 's/^go //p' go.mod)
+
 # Set an output prefix, which is the local directory if not specified
 PREFIX?=$(shell pwd)
 
