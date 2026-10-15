@@ -26,11 +26,11 @@ const e2e = "e2e"
 // Plugin versions should be the same as in
 // github.com/jenkinsci/kubernetes-operator/pkg/plugins/base_plugins.go
 const (
-	configurationAsCodePlugin           = "configuration-as-code:2037.v8e5349845172"
-	gitPlugin                           = "git:5.10.0"
-	jobDslPlugin                        = "job-dsl:3654.vdf58f53e2d15"
-	kubernetesPlugin                    = "kubernetes:4423.vb_59f230b_ce53"
-	kubernetesCredentialsProviderPlugin = "kubernetes-credentials-provider:1.303.vdfcf47fb_b_fef"
+	configurationAsCodePlugin           = "configuration-as-code:2117.vc05a_0b_e6b_f4e"
+	gitPlugin                           = "git:5.11.0"
+	jobDslPlugin                        = "job-dsl:3732.v9a_c49a_61a_313"
+	kubernetesPlugin                    = "kubernetes:4560.vc25b_83890c34"
+	kubernetesCredentialsProviderPlugin = "kubernetes-credentials-provider:1.315.v92008589c044"
 	// Depends on workflow-job which should be automatically downloaded
 	// Hardcoding the workflow-job version leads to frequent breakage
 	workflowAggregatorPlugin = "workflow-aggregator:608.v67378e9d3db_1"
@@ -125,7 +125,7 @@ func verifyJenkinsMasterPodAttributes(jenkins *v1alpha2.Jenkins) {
 
 	defaultGracePeriod := constants.DefaultTerminationGracePeriodSeconds
 
-	assertMapContainsElementsFromAnotherMap(jenkins.Spec.Master.Annotations, jenkinsPod.ObjectMeta.Annotations)
+	assertMapContainsElementsFromAnotherMap(jenkins.Spec.Master.Annotations, jenkinsPod.Annotations)
 	Expect(jenkinsPod.Spec.NodeSelector).Should(Equal(jenkins.Spec.Master.NodeSelector))
 
 	Expect(jenkinsPod.Spec.Containers[0].Name).Should(Equal(resources.JenkinsMasterContainerName))

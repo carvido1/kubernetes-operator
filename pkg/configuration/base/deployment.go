@@ -3,6 +3,7 @@ package base
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jenkinsci/kubernetes-operator/api/v1alpha2"
 	"github.com/jenkinsci/kubernetes-operator/pkg/configuration/base/resources"
@@ -24,9 +25,9 @@ func (r *JenkinsBaseConfigurationReconciler) ensureJenkinsDeployment(meta metav1
 
 	_, err = r.GetJenkinsDeployment()
 	if apierrors.IsNotFound(err) {
-		jenkinsDeployment := resources.NewJenkinsDeployment(meta, r.Configuration.Jenkins)
+		jenkinsDeployment := resources.NewJenkinsDeployment(meta, r.Jenkins)
 		*r.Notifications <- event.Event{
-			Jenkins: *r.Configuration.Jenkins,
+			Jenkins: *r.Jenkins,
 			Phase:   event.PhaseBase,
 			Level:   v1alpha2.NotificationLevelInfo,
 			Reason:  reason.NewPodCreation(reason.OperatorSource, []string{"Creating a Jenkins Deployment"}),
@@ -39,14 +40,14 @@ func (r *JenkinsBaseConfigurationReconciler) ensureJenkinsDeployment(meta metav1
 		}
 
 		now := metav1.Now()
-		r.Configuration.Jenkins.Status = v1alpha2.JenkinsStatus{
+		r.Jenkins.Status = v1alpha2.JenkinsStatus{
 			OperatorVersion:     version.Version,
 			ProvisionStartTime:  &now,
-			LastBackup:          r.Configuration.Jenkins.Status.LastBackup,
-			PendingBackup:       r.Configuration.Jenkins.Status.LastBackup,
+			LastBackup:          r.Jenkins.Status.LastBackup,
+			PendingBackup:       r.Jenkins.Status.LastBackup,
 			UserAndPasswordHash: userAndPasswordHash,
 		}
-		return reconcile.Result{Requeue: true}, r.Client.Update(context.TODO(), r.Configuration.Jenkins)
+		return reconcile.Result{RequeueAfter: time.Second * 5}, r.Client.Update(context.TODO(), r.Jenkins)
 	} else if err != nil && !apierrors.IsNotFound(err) {
 		return reconcile.Result{}, stackerr.WithStack(err)
 	}

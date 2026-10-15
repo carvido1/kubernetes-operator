@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"reflect"
 	"time"
 
@@ -78,22 +77,9 @@ type JenkinsReconciler struct {
 // SetupWithManager sets up the controller with the Manager.
 func (r *JenkinsReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	jenkinsHandler := &enqueueRequestForJenkins{}
-	configMapResource := &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: APIVersion,
-			Kind:       SecretKind,
-		},
-	}
-	secretResource := &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: APIVersion,
-			Kind:       SecretKind,
-		},
-	}
-	decorator := jenkinsDecorator{
-		handler: &handler.EnqueueRequestForObject{},
-	}
-
+	configMapResource := &corev1.ConfigMap{TypeMeta: metav1.TypeMeta{APIVersion: APIVersion, Kind: ConfigMapKind}}
+	secretResource := &corev1.Secret{TypeMeta: metav1.TypeMeta{APIVersion: APIVersion, Kind: SecretKind}}
+	decorator := jenkinsDecorator{handler: &handler.EnqueueRequestForObject{}}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha2.Jenkins{}).
 		Owns(&corev1.Pod{}).
@@ -147,7 +133,7 @@ func (r *JenkinsReconciler) Reconcile(_ context.Context, request ctrl.Request) (
 
 	result, jenkins, err := r.reconcile(request)
 	if err != nil && apierrors.IsConflict(err) {
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{}, err
 	} else if err != nil {
 		lastErrors, found := reconcileErrors[request.Name]
 		if found {
@@ -180,7 +166,7 @@ func (r *JenkinsReconciler) Reconcile(_ context.Context, request ctrl.Request) (
 					[]string{fmt.Sprintf("Reconcile loop failed %d times with the same errors, giving up: %s", reconcileFailLimit, err)},
 				),
 			}
-			return reconcile.Result{Requeue: false}, nil
+			return reconcile.Result{}, nil
 		}
 
 		if log.Debug {
@@ -200,13 +186,11 @@ func (r *JenkinsReconciler) Reconcile(_ context.Context, request ctrl.Request) (
 					[]string{fmt.Sprintf("%s Source '%s' Name '%s' groovy script execution failed, logs: %+v", groovyErr.ConfigurationType, groovyErr.Source, groovyErr.Name, groovyErr.Logs)}...,
 				),
 			}
-			return reconcile.Result{Requeue: false}, nil
+			return reconcile.Result{}, nil
 		}
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{RequeueAfter: time.Second}, nil
 	}
-	if result.Requeue && result.RequeueAfter == 0 {
-		result.RequeueAfter = time.Duration(rand.Intn(10)) * time.Second
-	}
+	// Random delay logic removed as result.Requeue is deprecated
 	return result, nil
 }
 
@@ -232,7 +216,7 @@ func (r *JenkinsReconciler) reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, jenkins, err
 	}
 	if requeue {
-		return reconcile.Result{Requeue: true}, jenkins, nil
+		return reconcile.Result{RequeueAfter: time.Second}, jenkins, nil
 	}
 
 	config := r.newJenkinsReconcilier(jenkins)
@@ -265,11 +249,11 @@ func (r *JenkinsReconciler) reconcile(request reconcile.Request) (reconcile.Resu
 	if err != nil {
 		return reconcile.Result{}, jenkins, err
 	}
-	if result.Requeue {
+	if result.RequeueAfter > 0 {
 		return result, jenkins, nil
 	}
 	if jenkinsClient == nil {
-		return reconcile.Result{Requeue: false}, jenkins, nil
+		return reconcile.Result{}, jenkins, nil
 	}
 
 	if jenkins.Status.BaseConfigurationCompletedTime == nil {
@@ -320,7 +304,7 @@ func (r *JenkinsReconciler) reconcile(request reconcile.Request) (reconcile.Resu
 	if err != nil {
 		return reconcile.Result{}, jenkins, err
 	}
-	if result.Requeue {
+	if result.RequeueAfter > 0 {
 		return result, jenkins, nil
 	}
 
@@ -329,7 +313,7 @@ func (r *JenkinsReconciler) reconcile(request reconcile.Request) (reconcile.Resu
 	if err != nil {
 		return reconcile.Result{}, jenkins, err
 	}
-	if result.Requeue {
+	if result.RequeueAfter > 0 {
 		return result, jenkins, nil
 	}
 

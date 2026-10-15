@@ -70,7 +70,7 @@ HAS_GOLINT := $(shell which $(PROJECT_DIR)/bin/golangci-lint)
 lint: ## Verifies `golint` passes
 	@echo "+ $@"
 ifndef HAS_GOLINT
-	GOBIN=$(PROJECT_DIR)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.0
+	GOBIN=$(PROJECT_DIR)/bin go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0
 endif
 	@bin/golangci-lint run
 
@@ -119,9 +119,9 @@ helm: ## Download helm if it's not present, otherwise symlink
 	@echo "+ $@"
 ifeq ($(strip $(HAS_HELM)),)
 	mkdir -p $(PROJECT_DIR)/bin
-	curl -Lo $(PROJECT_DIR)/bin/helm.tar.gz https://get.helm.sh/helm-v$(HELM_VERSION)-$(PLATFORM)-amd64.tar.gz && tar xzfv $(PROJECT_DIR)/bin/helm.tar.gz -C $(PROJECT_DIR)/bin
-	mv $(PROJECT_DIR)/bin/$(PLATFORM)-amd64/helm $(PROJECT_DIR)/bin/helm
-	rm -rf $(PROJECT_DIR)/bin/$(PLATFORM)-amd64
+	curl -Lo $(PROJECT_DIR)/bin/helm.tar.gz https://get.helm.sh/helm-v$(HELM_VERSION)-$(PLATFORM)-$(ARCH).tar.gz && tar xzfv $(PROJECT_DIR)/bin/helm.tar.gz -C $(PROJECT_DIR)/bin
+	mv $(PROJECT_DIR)/bin/$(PLATFORM)-$(ARCH)/helm $(PROJECT_DIR)/bin/helm
+	rm -rf $(PROJECT_DIR)/bin/$(PLATFORM)-$(ARCH)
 	rm -rf $(PROJECT_DIR)/bin/helm.tar.gz
 else
 	mkdir -p $(PROJECT_DIR)/bin
@@ -142,9 +142,9 @@ helm-release-latest: helm
 	mv /tmp/jenkins-operator-charts/*.tgz chart/jenkins-operator/
 
 .PHONY: helm-e2e
-IMAGE_NAME := quay.io/$(QUAY_ORGANIZATION)/$(QUAY_REGISTRY):$(GITCOMMIT)-amd64
+IMAGE_NAME := quay.io/$(QUAY_ORGANIZATION)/$(QUAY_REGISTRY):$(GITCOMMIT)-$(ARCH)
 
-helm-e2e: helm container-runtime-build-amd64 backup-kind-load ## Runs helm e2e tests, you can use EXTRA_ARGS
+helm-e2e: helm container-runtime-build-$(ARCH) backup-kind-load ## Runs helm e2e tests, you can use EXTRA_ARGS
 	kind load docker-image ${IMAGE_NAME} --name $(KIND_CLUSTER_NAME)
 	@echo "+ $@"
 	RUNNING_TESTS=1 go test -parallel=1 "./test/helm/" -ginkgo.v -tags "$(BUILDTAGS) cgo" -v -timeout 60m -run "$(E2E_TEST_SELECTOR)" -image-name=$(IMAGE_NAME) $(E2E_TEST_ARGS)
@@ -162,8 +162,8 @@ staticcheck: ## Verifies `staticcheck` passes
 	@echo "+ $@"
 ifndef HAS_STATICCHECK
 	$(eval TMP_DIR := $(shell mktemp -d))
-	wget -O $(TMP_DIR)/staticcheck_$(PLATFORM)_amd64.tar.gz https://github.com/dominikh/go-tools/releases/download/2023.1.7/staticcheck_$(PLATFORM)_amd64.tar.gz
-	tar zxvf $(TMP_DIR)/staticcheck_$(PLATFORM)_amd64.tar.gz -C $(TMP_DIR)
+	wget -O $(TMP_DIR)/staticcheck_$(PLATFORM)_$(ARCH).tar.gz https://github.com/dominikh/go-tools/releases/download/2026.2.1/staticcheck_$(PLATFORM)_$(ARCH).tar.gz
+	tar zxvf $(TMP_DIR)/staticcheck_$(PLATFORM)_$(ARCH).tar.gz -C $(TMP_DIR)
 	mkdir -p $(PROJECT_DIR)/bin
 	mv $(TMP_DIR)/staticcheck/staticcheck $(PROJECT_DIR)/bin
 	rm -rf $(TMP_DIR)
@@ -174,7 +174,7 @@ endif
 cover: ## Runs go test with coverage
 	@echo "" > coverage.txt
 	@for d in $(PACKAGES); do \
-		ENVTEST_K8S_VERSION = 1.26
+		ENVTEST_K8S_VERSION = 1.33
 		KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" IMG_RUNNING_TESTS=1 go test -race -coverprofile=profile.out -covermode=atomic "$$d"; \
 		if [ -f profile.out ]; then \
 			cat profile.out >> coverage.txt; \
@@ -214,7 +214,7 @@ update-jenkins-lts: ## Fetch latest Jenkins lts version and update if necessary
 	echo "latest version:  $$LATEST_VERSION"; \
 	if [ "$$CURRENT_VERSION" != "$$LATEST_VERSION" ]; then \
 		echo "updating Jenkins lts version from $$CURRENT_VERSION to $$LATEST_VERSION"; \
-		sed -i "s/LATEST_LTS_VERSION=\".*\"/LATEST_LTS_VERSION=\"$$LATEST_VERSION\"/" config.base.env; \
+		sed -i '' "s/LATEST_LTS_VERSION=\".*\"/LATEST_LTS_VERSION=\"$$LATEST_VERSION\"/" config.base.env; \
 		$(MAKE) update-lts-version LATEST_LTS_VERSION=$$LATEST_VERSION; \
 		echo "updated Jenkins LTS version to $$LATEST_VERSION"; \
 	else \
@@ -225,14 +225,14 @@ update-jenkins-lts: ## Fetch latest Jenkins lts version and update if necessary
 update-lts-version: ## Update the latest lts version
 	@echo "+ $@"
 	echo $(LATEST_LTS_VERSION)
-	sed -i 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' chart/jenkins-operator/values.yaml
-	sed -i 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' test/e2e/test_utility.go
-	sed -i 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' test/helm/helm_test.go
-	sed -i 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' pkg/constants/constants.go
+	sed -i '' 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' chart/jenkins-operator/values.yaml
+	sed -i '' 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' test/e2e/test_utility.go
+	sed -i '' 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' test/helm/helm_test.go
+	sed -i '' 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' pkg/constants/constants.go
 	#TODO: source the version from config.base.env for bats test, no need of hardcoded version
-	sed -i 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' test/bats/1-deploy.bats
-	sed -i 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' test/bats/2-deploy-with-more-options.bats
-	sed -i 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' test/bats/3-deploy-with-webhook.bats
+	sed -i '' 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' test/bats/1-deploy.bats
+	sed -i '' 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' test/bats/2-deploy-with-more-options.bats
+	sed -i '' 's|jenkins/jenkins:[0-9]\+.[0-9]\+.[0-9]\+|jenkins/jenkins:$(LATEST_LTS_VERSION)|g' test/bats/3-deploy-with-webhook.bats
 
 .PHONY: run
 run: export WATCH_NAMESPACE = $(NAMESPACE)
@@ -293,7 +293,7 @@ HAS_CHECKMAKE := $(shell which checkmake)
 checkmake: ## Check this Makefile
 	@echo "+ $@"
 ifndef HAS_CHECKMAKE
-	go get -u github.com/mrtazz/checkmake
+	go get -u github.com/checkmake/checkmake
 endif
 	@checkmake Makefile
 
@@ -393,10 +393,10 @@ HAS_GEN_CRD_API_REFERENCE_DOCS := $(shell ls gen-crd-api-reference-docs 2> /dev/
 scheme-doc-gen: ## Generate Jenkins CRD scheme doc
 	@echo "+ $@"
 ifndef HAS_GEN_CRD_API_REFERENCE_DOCS
-	@wget https://github.com/ahmetb/$(GEN_CRD_API)/releases/download/v0.1.2/$(GEN_CRD_API)_$(PLATFORM)_amd64.tar.gz
+	@wget https://github.com/ahmetb/$(GEN_CRD_API)/releases/download/v0.1.2/$(GEN_CRD_API)_$(PLATFORM)_$(ARCH).tar.gz
 	@mkdir -p $(GEN_CRD_API)
-	@tar -C $(GEN_CRD_API) -zxf $(GEN_CRD_API)_$(PLATFORM)_amd64.tar.gz
-	@rm $(GEN_CRD_API)_$(PLATFORM)_amd64.tar.gz
+	@tar -C $(GEN_CRD_API) -zxf $(GEN_CRD_API)_$(PLATFORM)_$(ARCH).tar.gz
+	@rm $(GEN_CRD_API)_$(PLATFORM)_$(ARCH).tar.gz
 endif
 	$(GEN_CRD_API)/$(GEN_CRD_API) -config gen-crd-api-config.json -api-dir $(PKG)/api/$(API_VERSION) -template-dir $(GEN_CRD_API)/template -out-file documentation/$(VERSION)/jenkins-$(API_VERSION)-scheme.md
 
@@ -423,10 +423,10 @@ kind-revamp: kind-clean kind-setup ## Delete and recreate kind cluster
 	@echo "+ $@"
 
 .PHONY: bats-tests ## Run bats tests
-IMAGE_NAME := quay.io/$(QUAY_ORGANIZATION)/$(QUAY_REGISTRY):$(GITCOMMIT)-amd64
+IMAGE_NAME := quay.io/$(QUAY_ORGANIZATION)/$(QUAY_REGISTRY):$(GITCOMMIT)-$(ARCH)
 BUILD_PRESENT := $(shell docker images |grep -q ${IMAGE_NAME})
 ifndef BUILD_PRESENT
-bats-tests: backup-kind-load container-runtime-build-amd64 ## Run bats tests
+bats-tests: backup-kind-load container-runtime-build-$(ARCH) ## Run bats tests
 	@echo "+ $@"
 	kind load docker-image ${IMAGE_NAME} --name $(KIND_CLUSTER_NAME)
 	OPERATOR_IMAGE="${IMAGE_NAME}" TERM=xterm bats -T -p test/bats$(if $(BATS_TEST_PATH),/${BATS_TEST_PATH})
@@ -447,7 +447,7 @@ sembump: # Download sembump locally if necessary
 	@echo "+ $@"
 ifndef HAS_SEMBUMP
 	mkdir -p $(PROJECT_DIR)/bin
-	wget -O $(PROJECT_DIR)/bin/sembump https://github.com/justintout/sembump/releases/download/v0.1.0/sembump-$(PLATFORM)-amd64
+	wget -O $(PROJECT_DIR)/bin/sembump https://github.com/justintout/sembump/releases/download/v0.1.0/sembump-$(PLATFORM)-$(ARCH)
 	chmod +x $(PROJECT_DIR)/bin/sembump
 endif
 
@@ -578,8 +578,8 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 
 ## Tool Versions
-KUSTOMIZE_VERSION ?= v5.3.0
-CONTROLLER_TOOLS_VERSION ?= v0.14.0
+KUSTOMIZE_VERSION ?= v5.4.2
+CONTROLLER_TOOLS_VERSION ?= v0.18.0
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -602,7 +602,7 @@ HAS_OPERATOR_SDK := $(shell which $(PROJECT_DIR)/bin/operator-sdk)
 operator-sdk: # Download operator-sdk locally if necessary
 	@echo "+ $@"
 ifndef HAS_OPERATOR_SDK
-	wget -O $(PROJECT_DIR)/bin/operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk_$(PLATFORM)_amd64
+	wget -O $(PROJECT_DIR)/bin/operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk_$(PLATFORM)_$(ARCH)
 	chmod +x $(PROJECT_DIR)/bin/operator-sdk
 endif
 
@@ -635,7 +635,7 @@ uninstall-cert-manager: kind-setup
 
 # Deploy the operator locally along with webhook using helm charts
 .PHONY: deploy-webhook
-deploy-webhook: container-runtime-build-amd64
+deploy-webhook: container-runtime-build-$(ARCH)
 	@echo "+ $@"
 	bin/helm upgrade jenkins chart/jenkins-operator --install --set-string operator.image=${IMAGE_NAME} --set webhook.enabled=true --set jenkins.enabled=false
 
